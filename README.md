@@ -1,5 +1,3 @@
-<img width="600" height="892" alt="image" src="https://github.com/user-attachments/assets/9ef295ea-cb60-4628-b923-540f72d972f4" /># Formula Kit
-
 Formula Kit is a lightweight expression authoring framework for Unity projects. It allows designers to author readable formulas
 that can be loaded from JSON files or registered at runtime, and comes with an editor window that accelerates iteration.
 
