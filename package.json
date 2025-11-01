@@ -1,0 +1,26 @@
+{
+  "name": "com.formulakit.core",
+  "displayName": "Formula Kit",
+  "version": "1.0.0",
+  "unity": "2021.3",
+  "description": "Tools for authoring, loading, and evaluating configurable formulas at runtime, including a rich editor window for prototyping.",
+  "keywords": [
+    "formula",
+    "math",
+    "runtime",
+    "editor"
+  ],
+  "license": "MIT",
+  "documentationUrl": "Documentation~/FormulaKit.md",
+  "changelogUrl": "CHANGELOG.md",
+  "samples": [
+    {
+      "displayName": "Formula Builder Quickstart",
+      "description": "Instructions and starter formulas for experimenting with the Formula Builder editor window.",
+      "path": "Samples~/Formula Builder Quickstart"
+    }
+  ],
+  "author": {
+    "name": "Formula Kit Contributors"
+  }
+}
