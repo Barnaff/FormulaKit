@@ -5,17 +5,64 @@ that can be loaded from JSON files or registered at runtime, and comes with an e
 
 ## Table of Contents
 
+- [API Overview](#api-overview)
+  - [Inline Evaluation](#inline-evaluation)
+  - [Fluent Builder](#fluent-builder)
+- [Advanced Usage](#advanced-usage)
+  - [Using FormulaLoader and FormulaRunner](#using-formulaloader-and-formularunner)
+  - [Caching Strategies](#caching-strategies)
+- [Supported Operations](#supported-operations)
+  - [Expression Syntax](#expression-syntax)
+  - [Built-in Functions](#built-in-functions)
+  - [Random Helpers](#random-helpers)
 - [Features](#features)
 - [Installation](#installation)
   - [Add via Unity Package Manager](#add-via-unity-package-manager)
   - [Install by Editing `manifest.json`](#install-by-editing-manifestjson)
-- [Quick Start](#quick-start)
-  - [Create and Evaluate a Formula](#create-and-evaluate-a-formula)
-  - [Load Formulas from JSON](#load-formulas-from-json)
 - [Editor Tooling](#editor-tooling)
 - [Samples](#samples)
 - [Additional Resources](#additional-resources)
 - [License](#license)
+
+## API Overview
+
+Formula Kit ships with a static `FormulaAPI` that offers the quickest way to evaluate expressions. Expressions can be evaluated
+inline or via a fluent builder that caches parsed formulas for reuse.
+
+### Inline Evaluation
+
+```csharp
+using System.Collections.Generic;
+using FormulaFramework;
+
+var inputs = new Dictionary<string, float>
+{
+    ["baseDamage"] = 10f,
+    ["strength"] = 5f
+};
+
+float total = FormulaAPI.Run("baseDamage * (1 + strength * 0.1f)", inputs);
+```
+
+- Formulas return `float` values.
+- Input variables that are not supplied default to `0`.
+- A deterministic cache identifier is generated automatically so repeated calls reuse the parsed formula.
+
+### Fluent Builder
+
+```csharp
+using FormulaFramework;
+
+float critical = FormulaAPI
+    .Run("(baseDamage + bonus) * crit")
+    .Set("baseDamage", 12f)
+    .Set("bonus", 3f)
+    .Set("crit", 1.5f)
+    .Evaluate();
+```
+
+The builder lets you populate inputs incrementally. Call `WithCache("myKey")` instead of `Evaluate()` to provide a custom cache
+identifier when you want to share the parsed expression between systems.
 
 ## Features
 
@@ -59,63 +106,65 @@ If you prefer to edit your project's `Packages/manifest.json` manually, add an e
 
 Save the file and Unity will fetch the package the next time the editor refreshes packages.
 
-## Quick Start
+## Advanced Usage
 
-### Create and Evaluate a Formula
+### Using FormulaLoader and FormulaRunner
 
-The runtime API revolves around two types: `FormulaLoader` stores the text of each formula, and `FormulaRunner` evaluates them.
+For projects that manage many expressions, instantiate `FormulaLoader` and `FormulaRunner` directly. Load formulas from JSON or
+register them in code and evaluate them by ID.
 
 ```csharp
 using FormulaKit.Runtime;
+using System.Collections.Generic;
 
 var loader = new FormulaLoader();
-loader.RegisterFormula("damage", "baseDamage * (1 + strength * 0.1)");
+FormulaJsonLoader.LoadJson(jsonText, loader);
+loader.RegisterFormula("heal", "baseHeal + spirit * 0.5f");
 
 var runner = new FormulaRunner(loader);
-var inputs = new Dictionary<string, float>
+var damage = runner.Evaluate("damage", new Dictionary<string, float>
 {
     ["baseDamage"] = 10f,
     ["strength"] = 5f
-};
-
-float total = runner.Evaluate("damage", inputs);
-```
-
-- Formulas return `float` values.
-- Input variables that are not supplied default to `0`.
-- Use standard arithmetic, comparison, logical operators, and ternary expressions.
-
-### Load Formulas from JSON
-
-`FormulaJsonLoader` supports importing formulas from external files so that designers can tweak values without a code change.
-
-```json
-{
-  "damage": "baseDamage * (1 + strength * 0.1)",
-  "heal": "baseHeal + spirit * 0.5"
-}
-```
-
-Load the JSON text (from a TextAsset, streaming assets, addressable, etc.) and pass it to `FormulaJsonLoader.LoadJson`:
-
-```csharp
-using FormulaKit.Runtime;
-
-TextAsset formulasAsset = Resources.Load<TextAsset>("FormulaExamples");
-
-var loader = new FormulaLoader();
-FormulaJsonLoader.LoadJson(formulasAsset.text, loader);
-
-var runner = new FormulaRunner(loader);
-var result = runner.Evaluate("heal", new Dictionary<string, float>
-{
-    ["baseHeal"] = 25f,
-    ["spirit"] = 12f
 });
 ```
 
-You can mix and match formulas registered in code and formulas loaded from JSON. Each formula is referenced by the identifier
-supplied when it was registered.
+Mix and match formulas registered in code and formulas loaded from external content. Each formula is referenced by the string
+identifier used during registration.
+
+### Caching Strategies
+
+- `FormulaAPI.Run(expression).WithCache("id")` stores the parsed expression under a custom key so other systems can reuse it.
+- Call `FormulaRunner.PrepareFormula("damage")` to pool input dictionaries for hot paths before entering a tight loop.
+- Use `FormulaRunner.UseInputPooling = false` when you prefer to allocate fresh dictionaries for every evaluation.
+- `FormulaAPI.ClearCache()` removes all cached expressions and pooled inputs.
+
+## Supported Operations
+
+### Expression Syntax
+
+- Arithmetic: `+`, `-`, `*`, `/`, `%`, and exponentiation `^`.
+- Unary operations: prefix `+`, prefix `-`, and logical negation `!`.
+- Comparisons: `<`, `<=`, `>`, `>=`, `==`, `!=`.
+- Logical operators: `&&`, `||`.
+- Conditional operator: `condition ? whenTrue : whenFalse`.
+- Statements: `let` declarations, assignments (`=`, `+=`, `-=`, `*=`, `/=`), `if`/`else`, and block scopes `{ ... }`.
+
+### Built-in Functions
+
+Unary helpers:
+
+`sqrt`, `abs`, `floor`, `ceil`, `round`, `sin`, `cos`, `tan`, `log`, `exp`, `clamp01`, `sign`, `negative`, `acos`, `asin`, `atan`.
+
+Multi-argument helpers:
+
+`min(a, b)`, `max(a, b)`, `clamp(value, min, max)`, `lerp(a, b, t)`, `pow(a, b)`.
+
+### Random Helpers
+
+- `random()` returns a float in `[0, 1]`.
+- `rand(max)` returns an integer from `0` to `max - 1`.
+- `randf(max)` returns a float in `[0, max)`.
 
 ## Editor Tooling
 
@@ -136,7 +185,6 @@ ready-made formulas covering common gameplay systems. Import it through the Unit
 
 ## Additional Resources
 
-- API and workflow documentation lives in `Documentation~/FormulaKit.md`.
 - Tests under the `Tests/` folder demonstrate expected runtime behaviours.
 - Submit issues and feature requests through the repository issue tracker.
 
