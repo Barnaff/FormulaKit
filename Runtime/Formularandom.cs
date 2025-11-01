@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FormulaFramework
+namespace FormulaKit.Runtime
 {
     /// <summary>
     /// Random number provider for formulas
@@ -31,24 +31,13 @@ namespace FormulaFramework
     public class DefaultRandomProvider : IRandomProvider
     {
         [ThreadStatic]
-        private static Random random;
+        private static Random _random;
         
-        private static Random Random
-        {
-            get
-            {
-                if (random == null)
-                {
-                    random = new Random();
-                }
-                return random;
-            }
-        }
-        
+        private static Random Random => _random ??= new Random();
+
         public int Next(int max)
         {
-            if (max <= 0) return 0;
-            return Random.Next(max);
+            return max <= 0 ? 0 : Random.Next(max);
         }
         
         public float NextFloat(float max)
@@ -67,27 +56,26 @@ namespace FormulaFramework
     /// </summary>
     public class SeededRandomProvider : IRandomProvider
     {
-        private readonly Random random;
+        private readonly Random _random;
         
         public SeededRandomProvider(int seed)
         {
-            random = new Random(seed);
+            _random = new Random(seed);
         }
         
         public int Next(int max)
         {
-            if (max <= 0) return 0;
-            return random.Next(max);
+            return max <= 0 ? 0 : _random.Next(max);
         }
         
         public float NextFloat(float max)
         {
-            return (float)(random.NextDouble() * max);
+            return (float)(_random.NextDouble() * max);
         }
         
         public float Value()
         {
-            return (float)random.NextDouble();
+            return (float)_random.NextDouble();
         }
     }
     
@@ -96,30 +84,29 @@ namespace FormulaFramework
     /// </summary>
     public class FixedRandomProvider : IRandomProvider
     {
-        private readonly float fixedValue;
+        private readonly float _fixedValue;
         
         public FixedRandomProvider(float fixedValue = 0.5f)
         {
-            this.fixedValue = fixedValue;
+            _fixedValue = fixedValue;
         }
         
         public int Next(int max)
         {
-            return (int)(fixedValue * max);
+            return (int)(_fixedValue * max);
         }
         
         public float NextFloat(float max)
         {
-            return fixedValue * max;
+            return _fixedValue * max;
         }
         
         public float Value()
         {
-            return fixedValue;
+            return _fixedValue;
         }
     }
     
-    #if UNITY_2019_1_OR_NEWER
     /// <summary>
     /// Unity random provider using UnityEngine.Random
     /// Uses Unity's random system (not thread-safe)
@@ -128,8 +115,7 @@ namespace FormulaFramework
     {
         public int Next(int max)
         {
-            if (max <= 0) return 0;
-            return UnityEngine.Random.Range(0, max);
+            return max <= 0 ? 0 : UnityEngine.Random.Range(0, max);
         }
         
         public float NextFloat(float max)
@@ -142,5 +128,4 @@ namespace FormulaFramework
             return UnityEngine.Random.value;
         }
     }
-    #endif
 }

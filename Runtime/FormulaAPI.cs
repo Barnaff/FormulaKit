@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
-using FormulaKit.Runtime;
 
-namespace FormulaFramework
+namespace FormulaKit.Runtime
 {
     /// <summary>
     /// Static entry point for running formulas with caching support.
@@ -12,9 +11,9 @@ namespace FormulaFramework
     /// </summary>
     public static class FormulaAPI
     {
-        private static readonly object SyncRoot = new object();
-        private static readonly FormulaLoader Loader = new FormulaLoader();
-        private static readonly FormulaRunner Runner = new FormulaRunner(Loader);
+        private static readonly object SyncRoot = new();
+        private static readonly FormulaLoader Loader = new();
+        private static readonly FormulaRunner Runner = new(Loader);
 
         /// <summary>
         /// Start building a formula execution request using a fluent API.
@@ -80,7 +79,7 @@ namespace FormulaFramework
                 var formulas = new Dictionary<string, string>();
                 foreach (var id in Loader.GetAllFormulaIds())
                 {
-                    string expression = Loader.GetFormulaExpression(id);
+                    var expression = Loader.GetFormulaExpression(id);
                     if (expression != null)
                     {
                         formulas[id] = expression;
@@ -93,13 +92,13 @@ namespace FormulaFramework
 
         private static string EnsureFormula(string expression, string cacheId)
         {
-            string formulaId = string.IsNullOrWhiteSpace(cacheId)
+            var formulaId = string.IsNullOrWhiteSpace(cacheId)
                 ? GenerateCacheId(expression)
                 : cacheId;
 
             lock (SyncRoot)
             {
-                string existingExpression = Loader.GetFormulaExpression(formulaId);
+                var existingExpression = Loader.GetFormulaExpression(formulaId);
                 if (existingExpression == null || !string.Equals(existingExpression, expression, StringComparison.Ordinal))
                 {
                     if (!Loader.RegisterFormula(formulaId, expression))
@@ -114,16 +113,14 @@ namespace FormulaFramework
 
         private static string GenerateCacheId(string expression)
         {
-            using (var sha = SHA256.Create())
+            using var sha = SHA256.Create();
+            var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(expression));
+            var builder = new StringBuilder(hash.Length * 2);
+            foreach (var b in hash)
             {
-                byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(expression));
-                var builder = new StringBuilder(hash.Length * 2);
-                foreach (byte b in hash)
-                {
-                    builder.Append(b.ToString("x2"));
-                }
-                return builder.ToString();
+                builder.Append(b.ToString("x2"));
             }
+            return builder.ToString();
         }
 
         /// <summary>
@@ -195,7 +192,7 @@ namespace FormulaFramework
 
             private float EvaluateInternal(string cacheId)
             {
-                string formulaId = EnsureFormula(_expression, cacheId);
+                var formulaId = EnsureFormula(_expression, cacheId);
                 var inputCopy = new Dictionary<string, float>(_inputs);
                 return Runner.Evaluate(formulaId, inputCopy);
             }

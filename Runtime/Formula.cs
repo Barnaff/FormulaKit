@@ -9,14 +9,14 @@ namespace FormulaKit.Runtime
     {
         public string Expression { get; private set; }
         public HashSet<string> RequiredInputs { get; private set; }
-        
+       
         private readonly IFormulaNode _rootNode;
 
         public Formula(string expression, IFormulaNode rootNode, HashSet<string> requiredInputs)
         {
             Expression = expression;
-            _rootNode = rootNode;
             RequiredInputs = requiredInputs;
+            _rootNode = rootNode;
         }
 
         /// <summary>
@@ -35,37 +35,4 @@ namespace FormulaKit.Runtime
     {
         float Evaluate(Dictionary<string, float> inputs);
     }
-
-    
-   
-    
-
-   
-
-    
-
-    // ============== ADVANCED NODES ==============
-
-   
-
-   
-
-  
-
-    
-
-   
-
-   
-
-    
-    
-    
-    
-
-    
-
-   
-
-    
 }

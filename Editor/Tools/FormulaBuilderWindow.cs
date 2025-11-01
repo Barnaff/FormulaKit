@@ -170,9 +170,7 @@ namespace FormulaKit.Editor.Tools
                 fontSize = 18,
                 alignment = TextAnchor.MiddleCenter
             };
-
             GUILayout.Label("Formula Builder", titleStyle, GUILayout.ExpandWidth(true));
-            EditorGUILayout.HelpBox("Create and test formulas with advanced editing.", MessageType.None);
         }
 
         private void DrawFormulaEditor()
@@ -263,13 +261,7 @@ namespace FormulaKit.Editor.Tools
                     {
                         AutoDetectInputs();
                     }
-
-                    if (GUILayout.Button("Add Input"))
-                    {
-                        string name = GenerateUniqueInputName();
-                        _testInputs[name] = 0f;
-                    }
-
+                    
                     using (new EditorGUI.DisabledScope(_testInputs.Count == 0))
                     {
                         if (GUILayout.Button("Clear"))
@@ -332,6 +324,13 @@ namespace FormulaKit.Editor.Tools
                     fontSize = 18,
                     fontStyle = FontStyle.Bold
                 };
+                var resultColor = Color.green;
+                if (float.IsNaN(_evaluationResult) || float.IsInfinity(_evaluationResult))
+                {
+                    resultColor = Color.red;
+                }
+                resultStyle.normal.textColor = resultColor;
+                resultStyle.hover.textColor = resultColor;
                 GUILayout.Box(_evaluationResult.ToString("F4"), resultStyle, GUILayout.Height(40f));
             }
         }

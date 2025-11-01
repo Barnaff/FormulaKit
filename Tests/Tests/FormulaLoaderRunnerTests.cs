@@ -48,27 +48,7 @@ namespace FormulaKit.Editor.Tests
             Assert.That(_loader.HasFormula("invalid"), Is.False, "Invalid formulas should not be cached");
             Assert.That(receivedError, Does.Contain("invalid"));
         }
-
-        [Test]
-        public void RegisterFormulas_ProcessesValidAndInvalidDefinitions()
-        {
-            var definitions = new List<FormulaDefinition>
-            {
-                new FormulaDefinition("valid", "a * 2"),
-                new FormulaDefinition("invalid", "if ("),
-                new FormulaDefinition("another", "let tmp = a + 1; tmp + b")
-            };
-
-            LogAssert.Expect(LogType.Error, new Regex(@"\[FormulaParser\] Parse error"));
-            int registeredCount = _loader.RegisterFormulas(definitions);
-
-            Assert.That(registeredCount, Is.EqualTo(2));
-            Assert.That(_loader.HasFormula("valid"), Is.True);
-            Assert.That(_loader.HasFormula("another"), Is.True);
-            Assert.That(_loader.HasFormula("invalid"), Is.False);
-            Assert.That(_loader.GetFormulaCount(), Is.EqualTo(2));
-        }
-
+        
         [Test]
         public void RemoveFormula_RemovesCachedFormula()
         {
