@@ -1,5 +1,6 @@
 Formula Kit is a lightweight expression authoring framework for Unity projects. It allows designers to author readable formulas
-that can be loaded from JSON files or registered at runtime, and comes with an editor window that accelerates iteration.
+that can be provided as plain strings from any source (ScriptableObjects, TextAssets, remote configs, etc.) and comes with an
+editor window that accelerates iteration.
 
 ## Table of Contents
 
@@ -45,41 +46,77 @@ float total = FormulaAPI.Run("baseDamage * (1 + strength * 0.1f)", inputs);
 - Formulas return `float` values.
 - Input variables that are not supplied default to `0`.
 - A deterministic cache identifier is generated automatically so repeated calls reuse the parsed formula.
+- Expressions are plain strings, so you can source them from any Unity asset, configuration system, or even download them at
+  runtime before evaluation.
 
 #### Static API Examples
 
-The `FormulaAPI.Run(expression, inputs)` helper is versatile enough to cover many gameplay scenarios. The snippet below shows
-five common patterns using a single input dictionary:
+`FormulaAPI.Run(expression, inputs)` is versatile enough to cover many gameplay scenarios. The following snippets each supply
+the inputs that matter for a specific expression:
 
 ```csharp
-var inputs = new Dictionary<string, float>
+// Arithmetic scaling
+var damageInputs = new Dictionary<string, float>
 {
     ["baseDamage"] = 18f,
-    ["strength"] = 12f,
-    ["critChance"] = 0.25f,
-    ["critMultiplier"] = 2f,
+    ["strength"] = 12f
+};
+
+float scaledDamage = FormulaAPI.Run("baseDamage * (1 + strength * 0.05)", damageInputs);
+```
+
+```csharp
+// Built-in helpers and clamping
+var energyInputs = new Dictionary<string, float>
+{
     ["currentEnergy"] = 45f,
     ["regen"] = 10f,
     ["deltaTime"] = 0.5f,
-    ["maxEnergy"] = 100f,
-    ["spirit"] = 30f,
-    ["targetSpirit"] = 24f,
+    ["maxEnergy"] = 100f
+};
+
+float energyTick = FormulaAPI.Run("clamp(currentEnergy + regen * deltaTime, 0, maxEnergy)", energyInputs);
+```
+
+```csharp
+// Branching with the ternary operator and random rolls
+var critInputs = new Dictionary<string, float>
+{
+    ["critChance"] = 0.25f,
+    ["critMultiplier"] = 2f
+};
+
+float critRoll = FormulaAPI.Run("randf(1) < critChance ? critMultiplier : 1", critInputs);
+```
+
+```csharp
+// Function composition for vector math
+var travelInputs = new Dictionary<string, float>
+{
     ["dx"] = 3f,
     ["dy"] = 4f,
     ["distanceWeight"] = 0.6f
 };
 
-float scaledDamage = FormulaAPI.Run("baseDamage * (1 + strength * 0.05)", inputs);
-float energyTick = FormulaAPI.Run("clamp(currentEnergy + regen * deltaTime, 0, maxEnergy)", inputs);
-float critRoll = FormulaAPI.Run("randf(1) < critChance ? critMultiplier : 1", inputs);
-float travelCost = FormulaAPI.Run("sqrt(dx * dx + dy * dy) * distanceWeight", inputs);
-float supportHeal = FormulaAPI.Run(
-    "let bonus = max(0, (spirit - targetSpirit) * 0.25) in baseDamage + bonus",
-    inputs);
+float travelCost = FormulaAPI.Run("sqrt(dx * dx + dy * dy) * distanceWeight", travelInputs);
 ```
 
-Each call demonstrates a different aspect of the expression language: arithmetic scaling, clamping, branching with random rolls,
-vector math helpers, and scoped `let` expressions.
+```csharp
+// Scoped variables and expressions via `let`
+var supportInputs = new Dictionary<string, float>
+{
+    ["baseDamage"] = 18f,
+    ["spirit"] = 30f,
+    ["targetSpirit"] = 24f
+};
+
+float supportHeal = FormulaAPI.Run(
+    "let bonus = max(0, (spirit - targetSpirit) * 0.25) in baseDamage + bonus",
+    supportInputs);
+```
+
+Each call highlights a different facet of the expression language, giving you a starting point for arithmetic chains, helper
+functions, branching logic, and multi-step calculations.
 
 ### Fluent Builder
 
@@ -101,7 +138,7 @@ identifier when you want to share the parsed expression between systems.
 
 - Runtime parser that evaluates arithmetic, logical, and conditional expressions.
 - Deterministic evaluation backed by a node graph representation.
-- JSON loader utilities so formulas can be stored outside of compiled code.
+- Lightweight runtime APIs that accept string formulas from any source in your project.
 - Editor tooling for prototyping, including syntax highlighting and evaluation helpers.
 - Test assembly demonstrating expected behaviours.
 
@@ -143,16 +180,17 @@ Save the file and Unity will fetch the package the next time the editor refreshe
 
 ### Using FormulaLoader and FormulaRunner
 
-For projects that manage many expressions, instantiate `FormulaLoader` and `FormulaRunner` directly. Load formulas from JSON or
-register them in code and evaluate them by ID.
+For projects that manage many expressions, instantiate `FormulaLoader` and `FormulaRunner` directly. Register formulas in code
+or inject string expressions from whichever content pipeline you use (ScriptableObjects, TextAssets, remote configs, etc.) and
+evaluate them by ID.
 
 ```csharp
 using FormulaKit.Runtime;
 using System.Collections.Generic;
 
 var loader = new FormulaLoader();
-FormulaJsonLoader.LoadJson(jsonText, loader);
 loader.RegisterFormula("heal", "baseHeal + spirit * 0.5f");
+loader.RegisterFormula("bossPhase", bossPhaseFormulaTextAsset.text);
 
 var runner = new FormulaRunner(loader);
 var damage = runner.Evaluate("damage", new Dictionary<string, float>
@@ -162,8 +200,8 @@ var damage = runner.Evaluate("damage", new Dictionary<string, float>
 });
 ```
 
-Mix and match formulas registered in code and formulas loaded from external content. Each formula is referenced by the string
-identifier used during registration.
+Mix and match formulas registered in code and formulas sourced from external content such as TextAssets, ScriptableObjects, or
+remote configuration payloads. Each formula is referenced by the string identifier used during registration.
 
 ### Caching Strategies
 
