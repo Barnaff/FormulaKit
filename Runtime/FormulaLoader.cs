@@ -4,19 +4,12 @@ using System.Collections.Generic;
 namespace FormulaKit.Runtime
 {
     /// <summary>
-    /// Pure C# formula loader - handles formula registration and caching
-    /// No Unity dependencies
-    /// </summary>
+    /// handles formula registration and caching
+    /// /// </summary>
     public class FormulaLoader
     {
-        private readonly Dictionary<string, Formula> formulaCache;
-        private readonly FormulaParser parser;
-
-        public FormulaLoader()
-        {
-            formulaCache = new Dictionary<string, Formula>();
-            parser = new FormulaParser();
-        }
+        private readonly Dictionary<string, Formula> _formulaCache = new();
+        private readonly FormulaParser _parser = new();
 
         /// <summary>
         /// Register a formula from a string expression
@@ -25,8 +18,8 @@ namespace FormulaKit.Runtime
         {
             try
             {
-                Formula formula = parser.Parse(expression);
-                formulaCache[id] = formula;
+                var formula = _parser.Parse(expression);
+                _formulaCache[id] = formula;
                 return true;
             }
             catch (Exception e)
@@ -35,37 +28,13 @@ namespace FormulaKit.Runtime
                 return false;
             }
         }
-
-        /// <summary>
-        /// Register multiple formulas from data objects
-        /// </summary>
-        public int RegisterFormulas(IEnumerable<FormulaDefinition> definitions)
-        {
-            int successCount = 0;
-            int failCount = 0;
-
-            foreach (var def in definitions)
-            {
-                if (RegisterFormula(def.Id, def.Expression))
-                {
-                    successCount++;
-                }
-                else
-                {
-                    failCount++;
-                }
-            }
-
-            OnLog?.Invoke($"Loaded {successCount} formulas, {failCount} failed");
-            return successCount;
-        }
-
+        
         /// <summary>
         /// Get a cached formula by ID
         /// </summary>
         public Formula GetFormula(string id)
         {
-            formulaCache.TryGetValue(id, out Formula formula);
+            _formulaCache.TryGetValue(id, out Formula formula);
             return formula;
         }
 
@@ -74,7 +43,7 @@ namespace FormulaKit.Runtime
         /// </summary>
         public bool HasFormula(string id)
         {
-            return formulaCache.ContainsKey(id);
+            return _formulaCache.ContainsKey(id);
         }
 
         /// <summary>
@@ -82,11 +51,7 @@ namespace FormulaKit.Runtime
         /// </summary>
         public HashSet<string> GetRequiredInputs(string id)
         {
-            if (formulaCache.TryGetValue(id, out Formula formula))
-            {
-                return formula.RequiredInputs;
-            }
-            return new HashSet<string>();
+            return _formulaCache.TryGetValue(id, out var formula) ? formula.RequiredInputs : new HashSet<string>();
         }
 
         /// <summary>
@@ -94,7 +59,7 @@ namespace FormulaKit.Runtime
         /// </summary>
         public IEnumerable<string> GetAllFormulaIds()
         {
-            return formulaCache.Keys;
+            return _formulaCache.Keys;
         }
 
         /// <summary>
@@ -102,7 +67,7 @@ namespace FormulaKit.Runtime
         /// </summary>
         public int GetFormulaCount()
         {
-            return formulaCache.Count;
+            return _formulaCache.Count;
         }
 
         /// <summary>
@@ -110,7 +75,7 @@ namespace FormulaKit.Runtime
         /// </summary>
         public bool RemoveFormula(string id)
         {
-            return formulaCache.Remove(id);
+            return _formulaCache.Remove(id);
         }
 
         /// <summary>
@@ -118,7 +83,7 @@ namespace FormulaKit.Runtime
         /// </summary>
         public void ClearAll()
         {
-            formulaCache.Clear();
+            _formulaCache.Clear();
             OnLog?.Invoke("All formulas cleared");
         }
 
@@ -134,22 +99,5 @@ namespace FormulaKit.Runtime
         // Events for logging and error handling
         public event Action<string> OnLog;
         public event Action<string> OnError;
-    }
-
-    /// <summary>
-    /// Simple formula definition data class
-    /// </summary>
-    public class FormulaDefinition
-    {
-        public string Id { get; set; }
-        public string Expression { get; set; }
-
-        public FormulaDefinition() { }
-
-        public FormulaDefinition(string id, string expression)
-        {
-            Id = id;
-            Expression = expression;
-        }
     }
 }
