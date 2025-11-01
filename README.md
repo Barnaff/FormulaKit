@@ -48,6 +48,41 @@ float total = FormulaAPI.Run("baseDamage * (1 + strength * 0.1f)", inputs);
 - Input variables that are not supplied default to `0`.
 - A deterministic cache identifier is generated automatically so repeated calls reuse the parsed formula.
 
+#### Static API Examples
+
+The `FormulaAPI.Run(expression, inputs)` helper is versatile enough to cover many gameplay scenarios. The snippet below shows
+five common patterns using a single input dictionary:
+
+```csharp
+var inputs = new Dictionary<string, float>
+{
+    ["baseDamage"] = 18f,
+    ["strength"] = 12f,
+    ["critChance"] = 0.25f,
+    ["critMultiplier"] = 2f,
+    ["currentEnergy"] = 45f,
+    ["regen"] = 10f,
+    ["deltaTime"] = 0.5f,
+    ["maxEnergy"] = 100f,
+    ["spirit"] = 30f,
+    ["targetSpirit"] = 24f,
+    ["dx"] = 3f,
+    ["dy"] = 4f,
+    ["distanceWeight"] = 0.6f
+};
+
+float scaledDamage = FormulaAPI.Run("baseDamage * (1 + strength * 0.05)", inputs);
+float energyTick = FormulaAPI.Run("clamp(currentEnergy + regen * deltaTime, 0, maxEnergy)", inputs);
+float critRoll = FormulaAPI.Run("randf(1) < critChance ? critMultiplier : 1", inputs);
+float travelCost = FormulaAPI.Run("sqrt(dx * dx + dy * dy) * distanceWeight", inputs);
+float supportHeal = FormulaAPI.Run(
+    "let bonus = max(0, (spirit - targetSpirit) * 0.25) in baseDamage + bonus",
+    inputs);
+```
+
+Each call demonstrates a different aspect of the expression language: arithmetic scaling, clamping, branching with random rolls,
+vector math helpers, and scoped `let` expressions.
+
 ### Fluent Builder
 
 ```csharp
