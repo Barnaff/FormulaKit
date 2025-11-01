@@ -111,7 +111,8 @@ var supportInputs = new Dictionary<string, float>
 };
 
 float supportHeal = FormulaAPI.Run(
-    "let bonus = max(0, (spirit - targetSpirit) * 0.25) in baseDamage + bonus",
+    @"let bonus = max(0, (spirit - targetSpirit) * 0.25);
+      baseDamage + bonus",
     supportInputs);
 ```
 
