@@ -156,7 +156,7 @@ Formula Kit is distributed as a Unity package that can be installed directly fro
 5. Paste the repository URL:
 
    ```
-   https://github.com/aornelas07/FormulaKit.git
+   https://github.com/Barnaff/FormulaKit.git
    ```
 
 6. Press **Add**. Unity downloads the package and registers it inside your project.
@@ -168,7 +168,7 @@ If you prefer to edit your project's `Packages/manifest.json` manually, add an e
 ```json
 {
   "dependencies": {
-    "com.aornelas.formulakit": "https://github.com/aornelas07/FormulaKit.git",
+    "com.aornelas.formulakit": "https://github.com/Barnaff/FormulaKit.git",
     "com.unity.modules.ui": "1.0.0",
     "com.unity.modules.uielements": "1.0.0"
   }
