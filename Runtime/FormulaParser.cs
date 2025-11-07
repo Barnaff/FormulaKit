@@ -610,7 +610,11 @@ namespace FormulaKit.Runtime
                 sb.Append(Read());
             }
 
-            return float.Parse(sb.ToString());
+            if (!float.TryParse(sb.ToString(), out var result))
+            {
+                throw new FormatException($"Invalid number format: {sb}");
+            }
+            return result;  
         }
 
         private string ParseIdentifier()

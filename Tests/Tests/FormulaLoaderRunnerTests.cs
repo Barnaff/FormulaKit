@@ -121,7 +121,7 @@ namespace FormulaKit.Editor.Tests
         }
 
         [Test]
-        public void Evaluate_WithMissingInput_InvokesErrorHandler()
+        public void Evaluate_WithMissingInput_ShouldIgnoreMissing()
         {
             _loader.RegisterFormula("sum", "a + b");
             string receivedError = null;
@@ -129,8 +129,7 @@ namespace FormulaKit.Editor.Tests
 
             float result = _runner.Evaluate("sum", new Dictionary<string, float> { { "a", 2f } });
 
-            Assert.That(result, Is.EqualTo(0f));
-            Assert.That(receivedError, Does.Contain("Variable 'b'"));
+            Assert.That(result, Is.EqualTo(2f));
         }
 
         [Test]
@@ -178,15 +177,15 @@ namespace FormulaKit.Editor.Tests
         }
 
         [Test]
-        public void TryEvaluate_ReturnsFalseWhenInputsMissing()
+        public void TryEvaluate_WhenInputsMissing_SshouldIgnoreMissing()
         {
             _loader.RegisterFormula("sum", "a + b");
             var inputs = new Dictionary<string, float> { { "a", 1f } };
 
             bool success = _runner.TryEvaluate("sum", inputs, out float result);
 
-            Assert.That(success, Is.False);
-            Assert.That(result, Is.EqualTo(0f));
+            Assert.That(result, Is.EqualTo(1f));
+            Assert.That(success, Is.True);
         }
 
         [Test]

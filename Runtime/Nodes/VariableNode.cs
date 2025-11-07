@@ -16,11 +16,7 @@ namespace FormulaKit.Runtime.Nodes
 
         public float Evaluate(Dictionary<string, float> inputs)
         {
-            if (inputs.TryGetValue(_variableName, out float value))
-            {
-                return value;
-            }
-            throw new KeyNotFoundException($"Variable '{_variableName}' not found in inputs");
+            return inputs.GetValueOrDefault(_variableName, 0f);
         }
     }
 }

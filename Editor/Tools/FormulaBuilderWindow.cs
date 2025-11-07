@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using FormulaKit.Editor.Tools.Utils;
 using FormulaKit.Runtime;
 using UnityEditor;
@@ -12,15 +10,15 @@ namespace FormulaKit.Editor.Tools
 {
     public partial class FormulaBuilderWindow : EditorWindow
     {
-        private readonly Dictionary<string, float> _testInputs = new Dictionary<string, float>();
-        private readonly List<FormulaExample> _examples = new List<FormulaExample>();
+        private readonly Dictionary<string, float> _testInputs = new ();
+        private readonly List<FormulaExample> _examples = new ();
 
         private FormulaLoader _tempLoader;
         private FormulaRunner _tempRunner;
 
         private string _formulaId = string.Empty;
         private string _formulaExpression = string.Empty;
-        private bool _advancedMode = true;
+        private bool _advancedMode;
 
         private Vector2 _inputsScroll;
         private float _evaluationResult;
@@ -31,12 +29,7 @@ namespace FormulaKit.Editor.Tools
         private EditorView _editorView;
         private EditorViewOptions _editorOptions;
         private bool _editorViewDirty = true;
-
-        private static readonly Regex NumberRegex = new Regex(@"\b\d+(\.\d+)?\b", RegexOptions.Compiled);
-        private static readonly Regex KeywordRegex = new Regex(@"\b(let|if|else|elseif|return|true|false)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex FunctionRegex = new Regex(@"\b(abs|acos|asin|atan|ceil|clamp|clamp01|cos|exp|floor|lerp|log|max|min|negative|pow|rand|randf|random|round|sign|sin|sqrt|tan)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex OperatorRegex = new Regex(@"[\+\-\*/=<>!&\|\^]+", RegexOptions.Compiled);
-
+        
         private static readonly string[] FormulaKeywords =
         {
             "let", "if", "elseif", "else", "return", "true", "false"
@@ -44,30 +37,30 @@ namespace FormulaKit.Editor.Tools
 
         private static readonly FunctionSnippet[] FunctionSnippets =
         {
-            new FunctionSnippet("abs", "abs(value)", "Returns the absolute value."),
-            new FunctionSnippet("acos", "acos(value)", "Arc cosine in radians."),
-            new FunctionSnippet("asin", "asin(value)", "Arc sine in radians."),
-            new FunctionSnippet("atan", "atan(value)", "Arc tangent in radians."),
-            new FunctionSnippet("ceil", "ceil(value)", "Rounds value up."),
-            new FunctionSnippet("clamp", "clamp(value, min, max)", "Clamp between min and max."),
-            new FunctionSnippet("clamp01", "clamp01(value)", "Clamp between 0 and 1."),
-            new FunctionSnippet("cos", "cos(radians)", "Cosine of the angle."),
-            new FunctionSnippet("exp", "exp(power)", "Euler's number raised to power."),
-            new FunctionSnippet("floor", "floor(value)", "Rounds value down."),
-            new FunctionSnippet("lerp", "lerp(a, b, t)", "Linearly interpolates."),
-            new FunctionSnippet("log", "log(value)", "Natural logarithm."),
-            new FunctionSnippet("max", "max(a, b)", "Maximum of two values."),
-            new FunctionSnippet("min", "min(a, b)", "Minimum of two values."),
-            new FunctionSnippet("negative", "negative(value)", "Negates the value."),
-            new FunctionSnippet("pow", "pow(value, power)", "Raises value to a power."),
-            new FunctionSnippet("rand", "rand(maxExclusive)", "Random integer."),
-            new FunctionSnippet("randf", "randf(maxExclusive)", "Random float below max."),
-            new FunctionSnippet("random", "random()", "Random float between 0 and 1."),
-            new FunctionSnippet("round", "round(value)", "Rounds to nearest integer."),
-            new FunctionSnippet("sign", "sign(value)", "Returns the sign."),
-            new FunctionSnippet("sin", "sin(radians)", "Sine of the angle."),
-            new FunctionSnippet("sqrt", "sqrt(value)", "Square root of value."),
-            new FunctionSnippet("tan", "tan(radians)", "Tangent of the angle."),
+            new FunctionSnippet("abs", "abs(value)"),
+            new FunctionSnippet("acos", "acos(value)"),
+            new FunctionSnippet("asin", "asin(value)"),
+            new FunctionSnippet("atan", "atan(value)"),
+            new FunctionSnippet("ceil", "ceil(value)"),
+            new FunctionSnippet("clamp", "clamp(value, min, max)"),
+            new FunctionSnippet("clamp01", "clamp01(value)"),
+            new FunctionSnippet("cos", "cos(radians)"),
+            new FunctionSnippet("exp", "exp(power)"),
+            new FunctionSnippet("floor", "floor(value)"),
+            new FunctionSnippet("lerp", "lerp(a, b, t)"),
+            new FunctionSnippet("log", "log(value)"),
+            new FunctionSnippet("max", "max(a, b)"),
+            new FunctionSnippet("min", "min(a, b)"),
+            new FunctionSnippet("negative", "negative(value)"),
+            new FunctionSnippet("pow", "pow(value, power)"),
+            new FunctionSnippet("rand", "rand(maxExclusive)"),
+            new FunctionSnippet("randf", "randf(maxExclusive)"),
+            new FunctionSnippet("random", "random()"),
+            new FunctionSnippet("round", "round(value)"),
+            new FunctionSnippet("sign", "sign(value)"),
+            new FunctionSnippet("sin", "sin(radians)"),
+            new FunctionSnippet("sqrt", "sqrt(value)"),
+            new FunctionSnippet("tan", "tan(radians)"),
         };
 
         [MenuItem("Tools/Formula Framework/Formula Builder")]
@@ -92,10 +85,13 @@ namespace FormulaKit.Editor.Tools
             {
                 Keywords = FormulaKeywords,
                 FunctionNames = FunctionSnippets.Select(snippet => snippet.Name).ToArray(),
-                ShowLineNumbers = true
+                ShowLineNumbers = true,
+                Palette =
+                {
+                    Keyword = new Color32(86, 156, 214, 255)
+                }
             };
 
-            options.Palette.Keyword = new Color32(86, 156, 214, 255);
             options.Palette.Parameter = options.Palette.Keyword;
             options.Palette.Function = new Color32(220, 220, 170, 255);
             options.Palette.Operator = new Color32(212, 212, 212, 255);
@@ -126,11 +122,12 @@ namespace FormulaKit.Editor.Tools
                 return;
             }
 
-            if (_editorViewDirty)
+            if (!_editorViewDirty)
             {
-                _editorView.OnEnable(_formulaExpression ?? string.Empty);
-                _editorViewDirty = false;
+                return;
             }
+            _editorView.OnEnable(_formulaExpression ?? string.Empty);
+            _editorViewDirty = false;
         }
 
         private void OnDisable()
@@ -179,7 +176,7 @@ namespace FormulaKit.Editor.Tools
             using (new EditorGUILayout.VerticalScope("box"))
             {
                 EditorGUI.BeginChangeCheck();
-                string newId = EditorGUILayout.TextField("Formula ID", _formulaId);
+                var newId = EditorGUILayout.TextField("Formula ID", _formulaId);
                 if (EditorGUI.EndChangeCheck())
                 {
                     _formulaId = newId.Trim();
@@ -187,7 +184,7 @@ namespace FormulaKit.Editor.Tools
 
                 GUILayout.Space(4f);
 
-                bool newAdvanced = EditorGUILayout.Toggle("Advanced Editor", _advancedMode);
+                var newAdvanced = EditorGUILayout.Toggle("Advanced Editor", _advancedMode);
                 if (newAdvanced != _advancedMode)
                 {
                     _advancedMode = newAdvanced;
@@ -285,8 +282,8 @@ namespace FormulaKit.Editor.Tools
                 else
                 {
                     _inputsScroll = EditorGUILayout.BeginScrollView(_inputsScroll, GUILayout.Height(160f));
-                    string[] keys = _testInputs.Keys.ToArray();
-                    foreach (string key in keys)
+                    var keys = _testInputs.Keys.ToArray();
+                    foreach (var key in keys)
                     {
                         using (new EditorGUILayout.HorizontalScope())
                         {
@@ -345,8 +342,8 @@ namespace FormulaKit.Editor.Tools
 
         private void ApplyRandomValues()
         {
-            string[] keys = _testInputs.Keys.ToArray();
-            foreach (string key in keys)
+            var keys = _testInputs.Keys.ToArray();
+            foreach (var key in keys)
             {
                 _testInputs[key] = UnityEngine.Random.Range(0f, 100f);
             }
@@ -369,12 +366,9 @@ namespace FormulaKit.Editor.Tools
             }
 
             var inputs = _tempLoader.GetRequiredInputs(_formulaId);
-            foreach (string input in inputs)
+            foreach (var input in inputs)
             {
-                if (!_testInputs.ContainsKey(input))
-                {
-                    _testInputs[input] = 0f;
-                }
+                _testInputs.TryAdd(input, 0f);
             }
 
             ShowStatus(inputs.Count > 0
@@ -390,7 +384,7 @@ namespace FormulaKit.Editor.Tools
                 return;
             }
 
-            bool success = _tempLoader.RegisterFormula(_formulaId, _formulaExpression);
+            var success = _tempLoader.RegisterFormula(_formulaId, _formulaExpression);
             if (!success)
             {
                 ShowStatus("Formula contains syntax errors.", MessageType.Error);
@@ -423,12 +417,12 @@ namespace FormulaKit.Editor.Tools
                 return;
             }
 
-            GenericMenu menu = new GenericMenu();
+            var menu = new GenericMenu();
             foreach (var group in _examples.GroupBy(e => e.Category))
             {
                 foreach (var example in group)
                 {
-                    string label = $"{group.Key}/{example.Name}";
+                    var label = $"{group.Key}/{example.Name}";
                     menu.AddItem(new GUIContent(label), false, () => ApplyExample(example));
                 }
             }
@@ -451,7 +445,7 @@ namespace FormulaKit.Editor.Tools
 
         private void ShowFunctionsMenu()
         {
-            GenericMenu menu = new GenericMenu();
+            var menu = new GenericMenu();
             foreach (var snippet in FunctionSnippets)
             {
                 menu.AddItem(new GUIContent(snippet.Name), false, () => InsertFunctionSnippet(snippet));
@@ -470,7 +464,7 @@ namespace FormulaKit.Editor.Tools
             }
             else
             {
-                string current = _formulaExpression ?? string.Empty;
+                var current = _formulaExpression ?? string.Empty;
                 current += (current.Length > 0 ? "\n" : string.Empty) + snippet.Snippet;
                 _formulaExpression = current;
                 _editorViewDirty = true;
@@ -503,60 +497,6 @@ namespace FormulaKit.Editor.Tools
             }
         }
 
-        private string GenerateUniqueInputName()
-        {
-            int index = 1;
-            string candidate;
-            do
-            {
-                candidate = $"input{index}";
-                index++;
-            }
-            while (_testInputs.ContainsKey(candidate));
-
-            return candidate;
-        }
-
-        private static string HighlightFormula(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return string.Empty;
-            }
-
-            string escaped = EscapeRichText(text);
-            escaped = KeywordRegex.Replace(escaped, m => $"<color=#569CD6>{m.Value}</color>");
-            escaped = FunctionRegex.Replace(escaped, m => $"<color=#DCDCAA>{m.Value}</color>");
-            escaped = NumberRegex.Replace(escaped, m => $"<color=#B5CEA8>{m.Value}</color>");
-            escaped = OperatorRegex.Replace(escaped, m => $"<color=#D4D4D4>{m.Value}</color>");
-            return escaped;
-        }
-
-        private static string EscapeRichText(string text)
-        {
-            var builder = new StringBuilder(text.Length);
-            foreach (char c in text)
-            {
-                switch (c)
-                {
-                    case '<':
-                        builder.Append("&lt;");
-                        break;
-                    case '>':
-                        builder.Append("&gt;");
-                        break;
-                    case '&':
-                        builder.Append("&amp;");
-                        break;
-                    default:
-                        builder.Append(c);
-                        break;
-                }
-            }
-
-            return builder.ToString();
-        }
-
         private readonly struct FormulaExample
         {
             public string Category { get; }
@@ -577,13 +517,11 @@ namespace FormulaKit.Editor.Tools
         {
             public string Name { get; }
             public string Snippet { get; }
-            public string Description { get; }
 
-            public FunctionSnippet(string name, string snippet, string description)
+            public FunctionSnippet(string name, string snippet)
             {
                 Name = name;
                 Snippet = snippet;
-                Description = description;
             }
         }
     }

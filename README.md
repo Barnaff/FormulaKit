@@ -31,8 +31,8 @@ inline or via a fluent builder that caches parsed formulas for reuse.
 ### Inline Evaluation
 
 ```csharp
-using System.Collections.Generic;
-using FormulaFramework;
+using FormulaKit.Runtime;
+using System.Collections.Generic;   
 
 var inputs = new Dictionary<string, float>
 {
@@ -168,7 +168,7 @@ If you prefer to edit your project's `Packages/manifest.json` manually, add an e
 ```json
 {
   "dependencies": {
-    "com.aornelas.formulakit": "https://github.com/Barnaff/FormulaKit.git",
+    "com.barnaff.formulakit": "https://github.com/Barnaff/FormulaKit.git",
     "com.unity.modules.ui": "1.0.0",
     "com.unity.modules.uielements": "1.0.0"
   }

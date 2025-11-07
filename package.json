@@ -11,16 +11,10 @@
     "editor"
   ],
   "license": "MIT",
-  "documentationUrl": "Documentation~/FormulaKit.md",
+  "documentationUrl": "README.md",
   "changelogUrl": "CHANGELOG.md",
-  "samples": [
-    {
-      "displayName": "Formula Builder Quickstart",
-      "description": "Instructions and starter formulas for experimenting with the Formula Builder editor window.",
-      "path": "Samples~/Formula Builder Quickstart"
-    }
-  ],
   "author": {
-    "name": "Formula Kit Contributors"
+    "name": "Kobi CHariski",
+    "url": "https://github.com/Barnaff/"
   }
 }
