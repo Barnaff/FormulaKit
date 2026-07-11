@@ -1,7 +1,7 @@
 {
   "name": "com.kobapps.formulakit",
   "version": "1.2.2",
-  "displayName": "Formula Kit",
+  "displayName": "FormulaKit",
   "description": "Author readable text formulas (arithmetic, conditionals, let-bindings, return, built-in math/random helpers) and evaluate them at runtime. Includes a UI Toolkit Formula Builder for live authoring with syntax highlighting, undo, and inline error markers, and a Formula Reference window documenting every supported expression.",
   "unity": "2022.3",
   "license": "MIT",
@@ -10,7 +10,7 @@
   "licensesUrl": "https://github.com/Kobapps/FormulaKit/blob/main/LICENSE.md",
   "author": {
     "name": "Kobapps",
-    "url": "https://kobapps.com/"
+    "url": "https://github.com/Kobapps"
   },
   "keywords": [
     "formula",
